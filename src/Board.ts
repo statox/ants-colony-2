@@ -68,6 +68,12 @@ export class Board {
         for (const ant of this.ants) {
             ant.update();
         }
+
+        for (let j = 0; j < this.D; j++) {
+            for (let i = 0; i < this.D; i++) {
+                this.cells[j][i].evaporatePheromones();
+            }
+        }
     }
 
     setFoodSource() {
@@ -78,7 +84,7 @@ export class Board {
             randI = Math.ceil(Math.random() * this.cells[0].length - 1);
         }
 
-        this.cells[randJ][randI].food = 2;
+        this.cells[randJ][randI].food = this.cells[randJ][randI].MAX_FOOD;
     }
 
     makeRandomOpenings() {
@@ -151,17 +157,20 @@ export class Board {
 
         for (let j = 0; j < this.D; j++) {
             for (let i = 0; i < this.D; i++) {
-                let color = white;
-                if (j === Math.ceil(this.D / 2) && i === Math.ceil(this.D / 2)) {
+                const cell = this.cells[j][i];
+                let color;
+                if (cell.startingCell) {
                     color = red;
+                } else if (cell.food > 0) {
+                    const diff = (250 / cell.MAX_FOOD) * cell.food;
+                    color = [250 - diff, 250, 250 - diff];
+                } else if (cell.pheromones) {
+                    color = [250, 250, 250];
+                    color[1] -= (250 / cell.MAX_PHEROMONES) * cell.pheromones;
+                } else {
+                    color = white;
                 }
-                if (this.cells[j][i].food > 0) {
-                    color = [50, 150, 50];
-                }
-                if (this.cells[j][i].food > 1) {
-                    color = [50, 250, 50];
-                }
-                this.cells[j][i].draw(scale, color);
+                cell.draw(scale, color);
             }
         }
 

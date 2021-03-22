@@ -7,7 +7,7 @@ import {Ant} from './Ant';
 
 const sketch = (p5: P5) => {
     let D = 800;
-    let cellsD = 20;
+    let cellsD = 10;
     let nbAnts = 2;
 
     let board: Board;
@@ -31,6 +31,9 @@ const sketch = (p5: P5) => {
         p5.background(120, 50, 50);
         board.update();
         board.draw();
+
+        const fpsText = `${p5.frameRate()} fps`;
+        p5.text(fpsText, 10, 10);
     };
 };
 

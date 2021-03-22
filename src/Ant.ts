@@ -53,6 +53,7 @@ export class Ant {
 
     backtrack() {
         this.cell = this.path.pop();
+        this.cell.addPheromones();
     }
 
     explore() {

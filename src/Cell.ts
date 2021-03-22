@@ -20,6 +20,9 @@ export class Cell {
     paths: Paths;
     food: number;
     startingCell: boolean;
+    pheromones: number;
+    MAX_PHEROMONES: number;
+    MAX_FOOD: number;
 
     constructor(p5, i, j) {
         this.p5 = p5;
@@ -32,6 +35,19 @@ export class Cell {
             left: null
         };
         this.startingCell = false;
+        this.pheromones = 0;
+        this.MAX_PHEROMONES = 10;
+        this.MAX_FOOD = 10;
+    }
+    evaporatePheromones() {
+        this.pheromones *= 0.99;
+    }
+
+    addPheromones() {
+        // console.log({pheromones: this.pheromones, max: this.MAX_PHEROMONES});
+        if (this.pheromones < this.MAX_PHEROMONES) {
+            this.pheromones += 1;
+        }
     }
 
     toString() {
