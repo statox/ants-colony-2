@@ -6,7 +6,7 @@
   "scripts": {
     "start": "parcel index.html --open",
     "build": "parcel build index.html",
-    "build-ci": "parcel build index.html --public-url /ants"
+    "build-ci": "parcel build index.html --public-url /"
   },
   "dependencies": {
     "@types/p5": "0.9.0",

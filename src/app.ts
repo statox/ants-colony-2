@@ -32,7 +32,7 @@ const sketch = (p5: P5) => {
         board.update();
         board.draw();
 
-        const fpsText = `${p5.frameRate()} fps`;
+        const fpsText = `${p5.frameRate().toFixed(0)} fps`;
         p5.text(fpsText, 10, 10);
     };
 };
