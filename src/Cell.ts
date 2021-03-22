@@ -95,6 +95,22 @@ export class Cell {
         if (this.paths.left?.open === false) {
             this.p5.line(0, 0, 0, scale);
         }
+
+        /*
+         * if (this.pheromones - 1 > 0) {
+         *     this.p5.strokeWeight(1);
+         *     const pheromonesText = (this.pheromones - 1).toFixed(1);
+         *     this.p5.text(pheromonesText, 2, this.p5.textSize());
+         * }
+         */
+
+        /*
+         * if (this.food > 0) {
+         *     this.p5.strokeWeight(1);
+         *     const foodText = this.food.toString();
+         *     this.p5.text(foodText, scale - this.p5.textWidth(foodText), scale - this.p5.textSize());
+         * }
+         */
         this.p5.pop();
     }
 }

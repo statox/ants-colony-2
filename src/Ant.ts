@@ -44,7 +44,7 @@ export class Ant {
             this.explore();
             if (this.cell.food > 0) {
                 this.state = 'backtrack';
-                this.cell.food--;
+                // this.cell.food--;
             }
         } else if (this.state === 'backtrack') {
             this.backtrack();
@@ -56,35 +56,35 @@ export class Ant {
         this.cell.addPheromones();
     }
 
-    explore() {
-        const possibleWays = this.cell.possibleWays();
-        const unvisited = new Set<Cell>();
+    cellProbability(cell) {
+        let p = 1;
+        if (cell.pheromones >= 1) {
+            p *= cell.pheromones;
+        }
+        p *= this.visitedCells.has(cell) ? 1 : 2;
+        return p;
+    }
 
-        possibleWays.sort((a, b) => {
-            const visitedA = this.visitedCells.has(a);
-            const visitedB = this.visitedCells.has(b);
-            if (!visitedA && !visitedB) {
-                unvisited.add(a);
-                unvisited.add(b);
-                return 0;
-            }
-            if (visitedA && !visitedB) {
-                unvisited.add(b);
-                return 1;
-            }
-            if (!visitedA && visitedB) {
-                unvisited.add(a);
-                return -1;
-            }
-            return this.visitedCells.get(a) - this.visitedCells.get(b);
-        });
+    explore() {
+        // Choose the destination cell based on its desirability (target or not) and its
+        // amount of pheromones
+        const possibleWays = this.cell.possibleWays();
+        let totalScore = 0;
+        let cumulatedScores = [];
+        for (let i = 0; i < possibleWays.length; i++) {
+            const cell = possibleWays[i];
+            totalScore += this.cellProbability(cell);
+            cumulatedScores.push(totalScore);
+        }
+
+        const selectedScore = Math.random() * totalScore;
 
         let nextCell;
-        if (unvisited.size) {
-            const cells = Array.from(unvisited);
-            nextCell = cells[Math.ceil(Math.random() * cells.length - 1)];
-        } else {
-            nextCell = possibleWays[0];
+        for (let i = 0; i < possibleWays.length; i++) {
+            if (selectedScore <= cumulatedScores[i]) {
+                nextCell = possibleWays[i];
+                break;
+            }
         }
 
         this.age++;
