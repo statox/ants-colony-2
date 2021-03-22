@@ -18,16 +18,24 @@ export class Cell {
     p5: P5;
     pos: P5.Vector;
     paths: Paths;
+    food: number;
+    startingCell: boolean;
 
     constructor(p5, i, j) {
         this.p5 = p5;
         this.pos = this.p5.createVector(i, j);
+        this.food = 0;
         this.paths = {
             top: null,
             right: null,
             bottom: null,
             left: null
         };
+        this.startingCell = false;
+    }
+
+    toString() {
+        return `${this.pos.x}-${this.pos.y}`;
     }
 
     possibleWays(): Cell[] {
@@ -58,6 +66,7 @@ export class Cell {
 
         this.p5.noFill();
         this.p5.stroke(0);
+        this.p5.strokeWeight(2);
         if (this.paths.top?.open === false) {
             this.p5.line(0, 0, scale, 0);
         }

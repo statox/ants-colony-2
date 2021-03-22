@@ -8,6 +8,7 @@ import {Ant} from './Ant';
 const sketch = (p5: P5) => {
     let D = 800;
     let cellsD = 20;
+    let nbAnts = 2;
 
     let board: Board;
 
@@ -17,9 +18,10 @@ const sketch = (p5: P5) => {
         const canvas = p5.createCanvas(800, 800);
         canvas.parent('app');
 
-        board = new Board(p5, cellsD);
+        board = new Board(p5, cellsD, nbAnts);
         board.randomWalkMaze();
         board.makeRandomOpenings();
+        board.setFoodSource();
     };
 
     // The sketch draw method
@@ -27,7 +29,7 @@ const sketch = (p5: P5) => {
         const scale = p5.width / cellsD;
 
         p5.background(120, 50, 50);
-        board.ant.randomWalk();
+        board.update();
         board.draw();
     };
 };

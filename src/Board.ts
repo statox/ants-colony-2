@@ -13,10 +13,13 @@ export class Board {
     cells: Cell[][];
     D: number;
     ant: Ant;
+    ants: Ant[];
+    nbAnts: number;
 
-    constructor(p5: P5, D: number) {
+    constructor(p5: P5, D: number, nbAnts: number) {
         this.p5 = p5;
         this.D = D;
+        this.nbAnts = nbAnts;
         this.cells = [];
 
         for (let j = 0; j < this.D; j++) {
@@ -55,11 +58,31 @@ export class Board {
             }
         }
 
-        this.ant = new Ant(this.p5, this.cells[this.D / 2][this.D / 2]);
+        this.ants = [];
+        for (let i = 0; i < this.nbAnts; i++) {
+            this.ants.push(new Ant(this.p5, this.cells[this.D / 2][this.D / 2], 0));
+        }
+    }
+
+    update() {
+        for (const ant of this.ants) {
+            ant.update();
+        }
+    }
+
+    setFoodSource() {
+        let randJ = Math.ceil(this.D / 2);
+        let randI = Math.ceil(this.D / 2);
+        while (randJ === Math.ceil(this.D / 2) && randI === Math.ceil(this.D / 2)) {
+            randJ = Math.ceil(Math.random() * this.cells.length - 1);
+            randI = Math.ceil(Math.random() * this.cells[0].length - 1);
+        }
+
+        this.cells[randJ][randI].food = 2;
     }
 
     makeRandomOpenings() {
-        for (let _ = 0; _ < 30; _++) {
+        for (let _ = 0; _ < 50; _++) {
             const randJ = Math.ceil(Math.random() * this.cells.length - 1);
             const randI = Math.ceil(Math.random() * this.cells[0].length - 1);
 
@@ -95,6 +118,7 @@ export class Board {
             stack.push(nextCell);
         }
 
+        this.cells[this.D / 2][this.D / 2].startingCell = true;
         this.makeWay(this.cells[this.D / 2][this.D / 2], 'top');
         this.makeWay(this.cells[this.D / 2][this.D / 2], 'right');
         this.makeWay(this.cells[this.D / 2][this.D / 2], 'bottom');
@@ -127,11 +151,22 @@ export class Board {
 
         for (let j = 0; j < this.D; j++) {
             for (let i = 0; i < this.D; i++) {
-                const color = j === Math.ceil(this.D / 2) && i === Math.ceil(this.D / 2) ? red : white;
+                let color = white;
+                if (j === Math.ceil(this.D / 2) && i === Math.ceil(this.D / 2)) {
+                    color = red;
+                }
+                if (this.cells[j][i].food > 0) {
+                    color = [50, 150, 50];
+                }
+                if (this.cells[j][i].food > 1) {
+                    color = [50, 250, 50];
+                }
                 this.cells[j][i].draw(scale, color);
             }
         }
 
-        this.ant.draw(scale);
+        for (const ant of this.ants) {
+            ant.draw(scale);
+        }
     }
 }
