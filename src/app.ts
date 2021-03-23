@@ -7,8 +7,8 @@ import {Ant} from './Ant';
 
 const sketch = (p5: P5) => {
     let D = 800;
-    let cellsD = 10;
-    let nbAnts = 2;
+    let cellsD = 20;
+    let nbAnts = 20;
 
     let board: Board;
 
@@ -19,9 +19,10 @@ const sketch = (p5: P5) => {
         canvas.parent('app');
 
         board = new Board(p5, cellsD, nbAnts);
-        board.randomWalkMaze();
-        board.makeRandomOpenings();
-        board.setFoodSource();
+        // board.randomWalkMaze();
+        // board.makeRandomOpenings();
+        // board.setFoodSource();
+        board.straightAndLongPathsAndFoodSource();
     };
 
     // The sketch draw method

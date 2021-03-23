@@ -60,7 +60,7 @@ export class Board {
 
         this.ants = [];
         for (let i = 0; i < this.nbAnts; i++) {
-            this.ants.push(new Ant(this.p5, this.cells[this.D / 2][this.D / 2], 0));
+            this.ants.push(new Ant(this.p5, this.cells[this.D * 0.8][this.D / 2], i));
         }
     }
 
@@ -73,6 +73,22 @@ export class Board {
             for (let i = 0; i < this.D; i++) {
                 this.cells[j][i].evaporatePheromones();
             }
+        }
+    }
+
+    straightAndLongPathsAndFoodSource() {
+        this.cells[this.D * 0.8][this.D / 2].startingCell = true;
+        this.cells[this.D * 0.8][0].food = this.cells[this.D * 0.8][0].MAX_FOOD;
+
+        for (let i = Math.ceil(this.D / 2); i < this.D - 1; i++) {
+            this.makeWay(this.cells[this.D * 0.8][i], 'right');
+        }
+
+        for (let i = 0; i < this.D; i++) {
+            this.makeWay(this.cells[this.D - 1][i], 'right');
+            this.makeWay(this.cells[0][i], 'right');
+            this.makeWay(this.cells[i][this.D - 1], 'top');
+            this.makeWay(this.cells[i][0], 'top');
         }
     }
 
