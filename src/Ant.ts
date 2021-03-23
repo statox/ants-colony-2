@@ -98,12 +98,16 @@ export class Ant {
             return;
         }
         const pos = this.cell.pos;
-        let color = [50, 50, 150];
+        let color = 'rgba(50, 50, 150, 0.5)';
         if (this.state === 'backtrack') {
-            color = [50, 150, 50];
+            color = 'rgba(50, 150, 50, 0.5)';
         }
         this.p5.push();
         this.p5.translate(pos.x * scale + scale / 2, pos.y * scale + scale / 2);
+
+        const offset = P5.Vector.random2D();
+        offset.setMag((Math.random() * scale) / 2);
+        this.p5.translate(offset.x, offset.y);
 
         this.p5.noStroke();
         this.p5.fill(color);
