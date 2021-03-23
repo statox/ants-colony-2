@@ -89,6 +89,7 @@ export class Board {
             this.makeWay(this.cells[0][i], 'right');
             this.makeWay(this.cells[i][this.D - 1], 'top');
             this.makeWay(this.cells[i][0], 'top');
+            this.makeWay(this.cells[i][this.D / 2], 'top');
         }
     }
 

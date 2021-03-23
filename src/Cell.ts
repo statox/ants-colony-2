@@ -36,11 +36,11 @@ export class Cell {
         };
         this.startingCell = false;
         this.pheromones = 0;
-        this.MAX_PHEROMONES = 10;
+        this.MAX_PHEROMONES = 1000;
         this.MAX_FOOD = 10;
     }
     evaporatePheromones() {
-        this.pheromones *= 0.99;
+        this.pheromones *= 0.999;
     }
 
     addPheromones() {

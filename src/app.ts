@@ -8,7 +8,7 @@ import {Ant} from './Ant';
 const sketch = (p5: P5) => {
     let D = 800;
     let cellsD = 20;
-    let nbAnts = 20;
+    let nbAnts = 200;
 
     let board: Board;
 
