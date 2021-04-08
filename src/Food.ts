@@ -20,9 +20,11 @@ export class FoodStock {
         this.quad.remove(item);
     }
 
-    generateRandomFoodSpot() {
-        const pos = P5.Vector.random2D();
-        pos.setMag((this.p5.width / 2) * this.p5.map(Math.random(), 0, 1, 0.3, 1));
+    generateFoodSpot(pos?: P5.Vector) {
+        if (!pos) {
+            pos = P5.Vector.random2D();
+            pos.setMag((this.p5.width / 2) * this.p5.map(Math.random(), 0, 1, 0.3, 1));
+        }
 
         let radius = 20;
         let amount = 100;

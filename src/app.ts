@@ -31,8 +31,8 @@ const sketch = (p5: P5) => {
             ants.push(new Ant(p5, quadToHome, quadToFood, foodStock, home, i));
         }
 
-        for (let i = 0; i < 10; i++) {
-            foodStock.generateRandomFoodSpot();
+        for (let i = 0; i < 2; i++) {
+            foodStock.generateFoodSpot();
         }
         // foodStock.generateFoodCircle();
         /*
@@ -77,8 +77,16 @@ const sketch = (p5: P5) => {
 
     p5.mousePressed = () => {
         // addAnt();
-        addPheromone(p5.mouseX - p5.width / 2, p5.mouseY - p5.height / 2);
+        addFood();
+        // addPheromone(p5.mouseX - p5.width / 2, p5.mouseY - p5.height / 2);
         // p5.noLoop();
+    };
+
+    const addFood = () => {
+        const pos = new P5.Vector();
+        pos.x = p5.mouseX - p5.width / 2;
+        pos.y = p5.mouseY - p5.height / 2;
+        foodStock.generateFoodSpot(pos);
     };
 
     const addAnt = () => {
