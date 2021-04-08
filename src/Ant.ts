@@ -97,7 +97,6 @@ export class Ant {
         }
 
         // Handle borders
-        // const LEFT = (-1 * this.p5.width) / 2;
         const LEFT = -this.p5.width / 2;
         const RIGHT = this.p5.width / 2;
         const TOP = -this.p5.height / 2;

@@ -45,7 +45,6 @@ const sketch = (p5: P5) => {
     // The sketch draw method
     p5.draw = () => {
         p5.background(0, 0, 0);
-        // const fpsText = `${p5.frameRate().toFixed(0)} fps`;
         const fpsText = `${getFrameRate()} fps`;
         p5.stroke('white');
         p5.fill('white');
@@ -80,6 +79,10 @@ const sketch = (p5: P5) => {
         addFood();
         // addPheromone(p5.mouseX - p5.width / 2, p5.mouseY - p5.height / 2);
         // p5.noLoop();
+    };
+
+    p5.touchStarted = () => {
+        addFood();
     };
 
     const addFood = () => {
