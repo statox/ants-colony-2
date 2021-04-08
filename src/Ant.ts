@@ -64,19 +64,6 @@ export class Ant {
         return false;
     }
 
-    handleBorders() {
-        if (
-            this.pos.x < -this.p5.width / 2 ||
-            this.pos.x > this.p5.width / 2 ||
-            this.pos.y < -this.p5.height / 2 ||
-            this.pos.y > this.p5.height / 2
-        ) {
-            this.pos = new P5.Vector();
-            this.speed = P5.Vector.random2D();
-            this.dir = P5.Vector.random2D();
-        }
-    }
-
     update() {
         this.age++;
 
@@ -89,7 +76,6 @@ export class Ant {
         }
 
         this.move();
-        this.handleBorders();
         if (this.age % this.layingDelay === 0) {
             this.layPheromone();
         }
@@ -108,6 +94,25 @@ export class Ant {
         if (barycenter) {
             this.dir.setMag(0);
             this.dir = barycenter.sub(this.pos);
+        }
+
+        // Handle borders
+        // const LEFT = (-1 * this.p5.width) / 2;
+        const LEFT = -this.p5.width / 2;
+        const RIGHT = this.p5.width / 2;
+        const TOP = -this.p5.height / 2;
+        const BOTTOM = this.p5.height / 2;
+        if (this.pos.x < LEFT) {
+            this.dir.x = 1000;
+        }
+        if (this.pos.x > RIGHT) {
+            this.dir.x = -1000;
+        }
+        if (this.pos.y < TOP) {
+            this.dir.y = 1000;
+        }
+        if (this.pos.y > BOTTOM) {
+            this.dir.y = -1000;
         }
 
         this.dir.rotate(Math.random() * this.maxAngle - this.maxAngle / 2);
