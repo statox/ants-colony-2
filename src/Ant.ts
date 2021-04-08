@@ -1,4 +1,6 @@
 import P5 from 'p5';
+import {FoodStock} from './Food';
+import {Home} from './Home';
 import {PheromoneTrail} from './PheromoneTrail';
 
 export class Ant {
@@ -6,194 +8,221 @@ export class Ant {
     id: number;
     pos: P5.Vector;
     speed: P5.Vector;
+    speedMag: number;
     dir: P5.Vector;
     state: 'explore' | 'backtrack';
     age: number;
     quadToHome: PheromoneTrail;
     quadToFood: PheromoneTrail;
+    foodStock: FoodStock;
     visionRadius: number;
-    layingDelayFood: number;
-    layingDelayHome: number;
-    driftLimitHome: number;
-    driftLimitFood: number;
+    layingDelay: number;
     maxAngle: number;
-    maxSpeed: number;
+    home: Home;
+    barycenter: P5.Vector;
 
-    constructor(p5, quadToHome, quadToFood, id) {
+    constructor(p5, quadToHome, quadToFood, foodStock, home, id) {
         this.p5 = p5;
         this.id = id;
         this.state = 'explore';
         this.age = 0;
-        this.visionRadius = 150;
-        this.layingDelayFood = 20;
-        this.layingDelayHome = 50;
-        this.driftLimitHome = 0.5;
-        this.driftLimitFood = 0.1;
-        this.maxAngle = p5.PI / 2;
-        this.maxSpeed = 0.5;
+        this.visionRadius = 50;
+        this.layingDelay = 15;
+        this.maxAngle = p5.radians(10);
+        this.speedMag = 4;
 
         this.pos = new P5.Vector();
         this.speed = P5.Vector.random2D();
         this.dir = P5.Vector.random2D();
         this.quadToHome = quadToHome;
         this.quadToFood = quadToFood;
+        this.foodStock = foodStock;
+        this.home = home;
     }
 
     hitFood() {
-        const dsquared = (this.pos.x - 150) * (this.pos.x - 150) + (this.pos.y - 150) * (this.pos.y - 150);
-        return dsquared <= 50 * 50;
+        const colliding = this.foodStock.quad.colliding({
+            x: this.pos.x - 5,
+            y: this.pos.y - 5,
+            width: 10,
+            height: 10
+        });
+        if (colliding.length) {
+            const food = colliding[0];
+            this.foodStock.quad.remove(food);
+
+            return true;
+        }
+        return false;
     }
+
     hitHome() {
-        return this.pos.mag() <= 50;
+        if (this.home.collide(this)) {
+            this.home.food++;
+            return true;
+        }
+        return false;
+    }
+
+    handleBorders() {
+        if (
+            this.pos.x < -this.p5.width / 2 ||
+            this.pos.x > this.p5.width / 2 ||
+            this.pos.y < -this.p5.height / 2 ||
+            this.pos.y > this.p5.height / 2
+        ) {
+            this.pos = new P5.Vector();
+            this.speed = P5.Vector.random2D();
+            this.dir = P5.Vector.random2D();
+        }
     }
 
     update() {
         this.age++;
-        // if (this.age % 200 === 0) {
-        // this.state = this.state === 'backtrack' ? 'explore' : 'backtrack';
-        // }
 
-        if (this.hitHome() && this.state === 'backtrack') {
+        if (this.state === 'backtrack' && this.hitHome()) {
             this.state = 'explore';
-        } else if (this.hitFood() && this.state === 'explore') {
+            this.dir.rotate(this.p5.PI);
+        } else if (this.state === 'explore' && this.hitFood()) {
             this.state = 'backtrack';
+            this.dir.rotate(this.p5.PI);
         }
 
+        this.move();
+        this.handleBorders();
+        if (this.age % this.layingDelay === 0) {
+            this.layPheromone();
+        }
+    }
+
+    move() {
+        let items;
         if (this.state === 'explore') {
-            this.explore();
+            items = [...this.getSeenItems('TO_FOOD'), ...this.getSeenItems('FOOD')];
         } else if (this.state === 'backtrack') {
-            this.backtrack();
+            items = this.getSeenItems('TO_HOME');
         }
 
-        /*
-         * Handle the borders by turning to the opposite wall and
-         * randomly turn more between -PI/2 and PI/2
-         */
-        let border = false;
-        if (this.pos.x < -this.p5.width / 2) {
-            this.speed.x = 1;
-            this.speed.y = 0;
-            border = true;
-        } else if (this.pos.x > this.p5.width / 2) {
-            this.speed.x = -1;
-            this.speed.y = 0;
-            border = true;
-        } else if (this.pos.y < -this.p5.height / 2) {
-            this.speed.x = 0;
-            this.speed.y = 1;
-            border = true;
-        } else if (this.pos.y > this.p5.height / 2) {
-            this.speed.x = 0;
-            this.speed.y = -1;
-            border = true;
-        }
-        if (border) {
-            const angle = Math.random() * this.p5.PI - this.p5.HALF_PI;
-            this.speed.rotate(angle);
-            this.speed.setMag(1);
+        const barycenter = this.getItemsBarycenter(items);
+        this.barycenter = barycenter?.copy();
+        if (barycenter) {
+            this.dir.setMag(0);
+            this.dir = barycenter.sub(this.pos);
         }
 
-        this.speed.limit(this.maxSpeed);
+        this.dir.rotate(Math.random() * this.maxAngle - this.maxAngle / 2);
+        this.speed.add(this.dir);
+        this.speed.setMag(this.speedMag);
+        this.pos.add(this.speed);
     }
 
-    backtrack() {
-        const drift = new P5.Vector();
-        this.getSurroundingPheromones('TO_HOME').forEach((p) => {
+    getSeenItems(type: 'TO_HOME' | 'TO_FOOD' | 'FOOD') {
+        let quad;
+        if (type === 'TO_FOOD') {
+            quad = this.quadToFood.quad;
+        } else if (type === 'TO_HOME') {
+            quad = this.quadToHome.quad;
+        } else {
+            quad = this.foodStock.quad;
+        }
+        const offset = this.speed.copy().normalize();
+        return quad.colliding({
+            x: this.pos.x + offset.x * this.visionRadius - this.visionRadius,
+            y: this.pos.y + offset.y * this.visionRadius - this.visionRadius,
+            width: this.visionRadius * 2,
+            height: this.visionRadius * 2
+        });
+    }
+
+    getItemsBarycenter(items: any[]) {
+        if (!items.length) {
+            return;
+        }
+        const barycenter = new P5.Vector();
+        items.forEach((p) => {
             const pvec = new P5.Vector();
             pvec.x = p.x;
             pvec.y = p.y;
-            drift.add(P5.Vector.sub(pvec, this.pos));
+            barycenter.add(pvec);
         });
-        drift.limit(this.driftLimitHome);
-
-        // this.dir = P5.Vector.random2D();
-        this.dir.rotate(Math.random() * this.maxAngle - this.maxAngle / 2);
-        this.dir.add(drift);
-        this.speed.add(this.dir);
-        this.pos.add(this.speed);
-        if (this.age % this.layingDelayFood === 0) {
-            this.layPheromone('TO_FOOD');
-        }
+        barycenter.div(items.length);
+        return barycenter;
     }
 
-    explore() {
-        const drift = new P5.Vector();
-        this.getSurroundingPheromones('TO_FOOD').forEach((p) => {
-            const pvec = new P5.Vector();
-            pvec.x = p.x;
-            pvec.y = p.y;
-            drift.add(P5.Vector.sub(pvec, this.pos));
-        });
-        drift.limit(this.driftLimitFood);
-
-        // this.dir = P5.Vector.random2D();
-        this.dir.rotate(Math.random() * this.maxAngle - this.maxAngle / 2);
-        this.dir.add(drift);
-        this.speed.add(this.dir);
-        this.pos.add(this.speed);
-        if (this.age % this.layingDelayHome === 0) {
-            this.layPheromone('TO_HOME');
-        }
-    }
-
-    layPheromone(type: 'TO_HOME' | 'TO_FOOD') {
+    layPheromone() {
         let trail = this.quadToFood;
-        if (type === 'TO_HOME') {
+        if (this.state === 'explore') {
             trail = this.quadToHome;
         }
         trail.push({x: this.pos.x, y: this.pos.y});
     }
 
-    getSurroundingPheromones(type: 'TO_HOME' | 'TO_FOOD'): any[] {
-        let trail = this.quadToFood;
-        if (type === 'TO_HOME') {
-            trail = this.quadToHome;
-        }
-
-        const SIZE = this.visionRadius;
-        const colliding = trail.quad.colliding(
-            {
-                x: this.pos.x,
-                y: this.pos.y
-            },
-            function (e1, e2) {
-                const dsquared = (e2.x - e1.x) * (e2.x - e1.x) + (e2.y - e1.y) * (e2.y - e1.y);
-                return dsquared <= SIZE * SIZE;
-            }
-        );
-        return colliding;
-    }
-
     draw() {
-        let color = 'rgba(50, 50, 150, 0.5)';
+        let color = 'rgba(116, 169, 247, 0.7)';
         if (this.state === 'backtrack') {
-            color = 'rgba(50, 150, 50, 0.5)';
+            color = 'rgba(116, 247, 169, 0.7)';
         }
 
         this.p5.fill(color);
         this.p5.noStroke();
-        this.p5.circle(this.pos.x, this.pos.y, 10);
+        this.p5.rect(this.pos.x, this.pos.y, 10, 10);
 
-        if (this.id === 0) {
-            // Circle around the ant to recognise it
-            this.p5.noFill();
-            this.p5.stroke('red');
-            this.p5.strokeWeight(2);
-            this.p5.circle(this.pos.x, this.pos.y, 10);
+        /*
+         * if (this.id === 0) {
+         *     this.drawInfo();
+         * }
+         */
+    }
 
-            // Vision radius circle
-            this.p5.strokeWeight(1);
-            this.p5.stroke('rgba(250, 0, 0, 0.4)');
-            this.p5.noFill();
-            this.p5.circle(this.pos.x, this.pos.y, this.visionRadius * 2);
+    drawInfo() {
+        this.p5.stroke('red');
+        this.p5.strokeWeight(2);
+        this.p5.noFill();
+        this.p5.rect(this.pos.x, this.pos.y, 10, 10);
 
-            // Considered pheromones
+        // Field of vision
+        this.p5.strokeWeight(1);
+        this.p5.stroke('rgba(250, 0, 0, 0.4)');
+        this.p5.noFill();
+        const offset = this.speed.copy().normalize();
+        this.p5.rect(
+            this.pos.x + offset.x * this.visionRadius,
+            this.pos.y + offset.y * this.visionRadius,
+            this.visionRadius * 2,
+            this.visionRadius * 2
+        );
+
+        // Considered pheromones
+        this.p5.noStroke();
+        this.p5.fill(235, 235, 50);
+        let items;
+        if (this.state === 'explore') {
+            items = [...this.getSeenItems('TO_FOOD'), ...this.getSeenItems('FOOD')];
+        } else if (this.state === 'backtrack') {
+            items = this.getSeenItems('TO_HOME');
+        }
+        items.forEach((p) => {
+            this.p5.rect(p.x, p.y, p.width, p.height);
+        });
+
+        // Speed vector
+        this.p5.fill(0, 250, 0);
+        this.p5.rect(this.pos.x + this.speed.x * 10, this.pos.y + this.speed.y * 10, 4, 4);
+
+        // Direction vector
+        this.p5.stroke(250, 0, 0);
+        this.p5.line(
+            this.pos.x + this.speed.x * 10,
+            this.pos.y + this.speed.y * 10,
+            this.dir.x * 10 + this.pos.x + this.speed.x * 10,
+            this.dir.y * 10 + this.pos.y + this.speed.y * 10
+        );
+
+        // pheromones barycenter
+        if (this.barycenter) {
+            this.p5.fill(50, 50, 250);
             this.p5.noStroke();
-            this.p5.fill('red');
-            const target = this.state === 'explore' ? 'TO_FOOD' : 'TO_HOME';
-            this.getSurroundingPheromones(target).forEach((p) => {
-                this.p5.circle(p.x, p.y, 3);
-            });
+            this.p5.rect(this.barycenter.x, this.barycenter.y, 10, 10);
         }
     }
 }

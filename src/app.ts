@@ -4,38 +4,55 @@ import './styles.scss';
 
 import {Ant} from './Ant';
 import {PheromoneTrail} from './PheromoneTrail';
+import {FoodStock} from './Food';
+import {Home} from './Home';
 
 const Quadtree = require('quadtree-lib');
 
 const sketch = (p5: P5) => {
     let D = 800;
-    let nbAnts = 100;
+    let nbAnts = 50;
     let ants = [];
+    let frameRateHistory = new Array(10).fill(0);
 
     const quadToHome = new PheromoneTrail(p5, D, 'TO_HOME');
     const quadToFood = new PheromoneTrail(p5, D, 'TO_FOOD');
-    const food = p5.createVector(150, 150);
-    const home = p5.createVector(0, 0);
+    const foodStock = new FoodStock(p5, D);
+    const home = new Home(p5);
 
     // The sketch setup method
     p5.setup = () => {
         // Creating and positioning the canvas
-        const canvas = p5.createCanvas(800, 800);
+        const canvas = p5.createCanvas(D, D);
         canvas.parent('app');
+        p5.rectMode(p5.CENTER);
 
         for (let i = 0; i < nbAnts; i++) {
-            ants.push(new Ant(p5, quadToHome, quadToFood, i));
+            ants.push(new Ant(p5, quadToHome, quadToFood, foodStock, home, i));
         }
+
+        for (let i = 0; i < 10; i++) {
+            foodStock.generateRandomFoodSpot();
+        }
+        // foodStock.generateFoodCircle();
+        /*
+         * foodStock.generateFoodSquare(300);
+         * foodStock.generateFoodSquare(310);
+         * foodStock.generateFoodSquare(320);
+         */
     };
 
     // The sketch draw method
     p5.draw = () => {
         p5.background(0, 0, 0);
-        const fpsText = `${p5.frameRate().toFixed(0)} fps`;
+        // const fpsText = `${p5.frameRate().toFixed(0)} fps`;
+        const fpsText = `${getFrameRate()} fps`;
         p5.stroke('white');
         p5.fill('white');
         p5.text(fpsText, 10, 10);
         p5.translate(p5.width / 2, p5.height / 2);
+
+        home.draw();
 
         quadToHome.update();
         quadToHome.draw();
@@ -43,39 +60,47 @@ const sketch = (p5: P5) => {
         quadToFood.update();
         quadToFood.draw();
 
-        for (let i = 0; i < nbAnts; i++) {
+        foodStock.draw();
+
+        for (let i = 0; i < ants.length; i++) {
             ants[i].update();
             ants[i].draw();
         }
 
-        p5.noFill();
-        p5.stroke('green');
-        p5.circle(food.x, food.y, 50);
-        p5.stroke('blue');
-        p5.circle(home.x, home.y, 50);
-
-        for (let i = 0; i < 20; i++) {
-            quadToHome.quad.push(
-                {
-                    x: Math.random() * 50 - 25,
-                    y: Math.random() * 50 - 25,
-                    ttl: 100
-                },
-                true
-            );
+        if (Math.random() < 0.3) {
+            quadToHome.push({
+                x: Math.random() * 50 - 25,
+                y: Math.random() * 50 - 25
+            });
         }
     };
 
     p5.mousePressed = () => {
-        addPheromone();
+        // addAnt();
+        addPheromone(p5.mouseX - p5.width / 2, p5.mouseY - p5.height / 2);
         // p5.noLoop();
     };
 
-    const addPheromone = () => {
-        quadToFood.push({
-            x: p5.mouseX - p5.width / 2,
-            y: p5.mouseY - p5.height / 2
-        });
+    const addAnt = () => {
+        ants.push(new Ant(p5, quadToHome, quadToFood, foodStock, home, ants.length));
+    };
+
+    const getFrameRate = () => {
+        frameRateHistory.shift();
+        frameRateHistory.push(p5.frameRate());
+        let total = frameRateHistory.reduce((a, b) => a + b) / frameRateHistory.length;
+        return total.toFixed(0);
+    };
+
+    const addPheromone = (x: number, y: number) => {
+        let quad: PheromoneTrail | FoodStock = quadToFood;
+        if (p5.keyIsDown(p5.SHIFT)) {
+            quad = foodStock;
+        }
+        if (p5.keyIsDown(p5.CONTROL)) {
+            quad = quadToHome;
+        }
+        quad.push({x, y});
     };
 };
 
