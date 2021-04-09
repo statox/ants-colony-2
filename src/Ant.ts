@@ -49,7 +49,7 @@ export class Ant {
         });
         if (colliding.length) {
             const food = colliding[0];
-            this.foodStock.quad.remove(food);
+            this.foodStock.remove(food);
 
             return true;
         }

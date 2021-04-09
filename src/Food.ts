@@ -4,11 +4,13 @@ const Quadtree = require('quadtree-lib');
 export class FoodStock {
     p5: P5;
     quad: Quadtree<any>;
+    itemSize: number;
     size: number;
 
     constructor(p5: P5, D: number) {
         this.p5 = p5;
-        this.size = 8;
+        this.itemSize = 8;
+        this.size = 0;
         this.quad = new Quadtree({
             width: D,
             height: D,
@@ -16,7 +18,19 @@ export class FoodStock {
         });
     }
 
+    update() {
+        console.log(this.size);
+        if (this.size < 10) {
+            this.generateFoodSpot();
+            const additionalToGenerate = Math.ceil(Math.random() * 5);
+            for (let _ = 0; _ < additionalToGenerate; _++) {
+                this.generateFoodSpot();
+            }
+        }
+    }
+
     remove(item) {
+        this.size--;
         this.quad.remove(item);
     }
 
@@ -54,12 +68,13 @@ export class FoodStock {
     }
 
     push(point: {x: number; y: number}) {
+        this.size++;
         this.quad.push(
             {
                 x: point.x,
                 y: point.y,
-                height: this.size,
-                width: this.size
+                height: this.itemSize,
+                width: this.itemSize
             },
             true
         );

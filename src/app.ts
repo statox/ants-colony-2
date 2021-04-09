@@ -31,9 +31,11 @@ const sketch = (p5: P5) => {
             ants.push(new Ant(p5, quadToHome, quadToFood, foodStock, home, i));
         }
 
-        for (let i = 0; i < 2; i++) {
-            foodStock.generateFoodSpot();
-        }
+        /*
+         * for (let i = 0; i < 2; i++) {
+         *     foodStock.generateFoodSpot();
+         * }
+         */
         // foodStock.generateFoodCircle();
         /*
          * foodStock.generateFoodSquare(300);
@@ -59,6 +61,7 @@ const sketch = (p5: P5) => {
         quadToFood.update();
         quadToFood.draw();
 
+        foodStock.update();
         foodStock.draw();
 
         for (let i = 0; i < ants.length; i++) {
