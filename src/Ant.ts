@@ -29,7 +29,9 @@ export class Ant {
         this.age = 0;
         this.visionRadius = 50;
         this.layingDelay = 15;
-        this.maxAngle = p5.radians(10);
+        // Angle of 10 degrees make then line up quicker
+        // Angle of 45 degrees still creates the issue but after a longer time
+        this.maxAngle = p5.radians(45);
         this.speedMag = 4;
 
         this.pos = new P5.Vector();
@@ -121,21 +123,25 @@ export class Ant {
     }
 
     move() {
-        let items;
-        if (this.state === 'explore') {
-            items = [...this.getSeenItems('TO_FOOD'), ...this.getSeenItems('FOOD')];
-        } else if (this.state === 'backtrack') {
-            items = this.getSeenItems('TO_HOME');
+        if (config.follow_pheromones) {
+            let items;
+            if (this.state === 'explore') {
+                items = [...this.getSeenItems('TO_FOOD'), ...this.getSeenItems('FOOD')];
+            } else if (this.state === 'backtrack') {
+                items = this.getSeenItems('TO_HOME');
+            }
+
+            const barycenter = this.getItemsBarycenter(items);
+            this.barycenter = barycenter?.copy();
+            if (barycenter) {
+                this.dir.setMag(0);
+                this.dir = barycenter.sub(this.pos);
+            }
         }
 
-        const barycenter = this.getItemsBarycenter(items);
-        this.barycenter = barycenter?.copy();
-        if (barycenter) {
-            this.dir.setMag(0);
-            this.dir = barycenter.sub(this.pos);
-        }
-
+        // Add random wiggling
         this.dir.rotate(Math.random() * this.maxAngle - this.maxAngle / 2);
+
         this.handleBorders();
         this.speed.add(this.dir);
         this.speed.setMag(this.speedMag);
@@ -193,11 +199,9 @@ export class Ant {
         this.p5.noStroke();
         this.p5.rect(this.pos.x, this.pos.y, 10, 10);
 
-        /*
-         * if (this.id === 0) {
-         *     this.drawInfo();
-         * }
-         */
+        if (this.id === config.ant_id_to_track) {
+            this.drawInfo();
+        }
     }
 
     drawInfo() {
