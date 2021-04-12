@@ -19,7 +19,6 @@ export class FoodStock {
     }
 
     update() {
-        console.log(this.size);
         if (this.size < 10) {
             this.generateFoodSpot();
             const additionalToGenerate = Math.ceil(Math.random() * 5);

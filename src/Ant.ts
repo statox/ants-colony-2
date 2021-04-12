@@ -2,6 +2,7 @@ import P5 from 'p5';
 import {FoodStock} from './Food';
 import {Home} from './Home';
 import {PheromoneTrail} from './PheromoneTrail';
+import config from './config';
 
 export class Ant {
     p5: P5;
@@ -81,6 +82,44 @@ export class Ant {
         }
     }
 
+    // Depending on the wrap mode either bounce on walls
+    // or go though the screen
+    // UPDATES EITHER THE POSITION OR THE DIRECTION
+    // SHOULD BE CALLED BEFORE APPLYING DIRECTION TO SPEED IN move()
+    handleBorders() {
+        const LEFT = -this.p5.width / 2;
+        const RIGHT = this.p5.width / 2;
+        const TOP = -this.p5.height / 2;
+        const BOTTOM = this.p5.height / 2;
+        if (config.wrap_edges) {
+            if (this.pos.x < LEFT) {
+                this.pos.x = RIGHT;
+            }
+            if (this.pos.x > RIGHT) {
+                this.pos.x = LEFT;
+            }
+            if (this.pos.y < TOP) {
+                this.pos.y = BOTTOM;
+            }
+            if (this.pos.y > BOTTOM) {
+                this.pos.y = TOP;
+            }
+        } else {
+            if (this.pos.x < LEFT) {
+                this.dir.x = 1000;
+            }
+            if (this.pos.x > RIGHT) {
+                this.dir.x = -1000;
+            }
+            if (this.pos.y < TOP) {
+                this.dir.y = 1000;
+            }
+            if (this.pos.y > BOTTOM) {
+                this.dir.y = -1000;
+            }
+        }
+    }
+
     move() {
         let items;
         if (this.state === 'explore') {
@@ -96,25 +135,8 @@ export class Ant {
             this.dir = barycenter.sub(this.pos);
         }
 
-        // Handle borders
-        const LEFT = -this.p5.width / 2;
-        const RIGHT = this.p5.width / 2;
-        const TOP = -this.p5.height / 2;
-        const BOTTOM = this.p5.height / 2;
-        if (this.pos.x < LEFT) {
-            this.dir.x = 1000;
-        }
-        if (this.pos.x > RIGHT) {
-            this.dir.x = -1000;
-        }
-        if (this.pos.y < TOP) {
-            this.dir.y = 1000;
-        }
-        if (this.pos.y > BOTTOM) {
-            this.dir.y = -1000;
-        }
-
         this.dir.rotate(Math.random() * this.maxAngle - this.maxAngle / 2);
+        this.handleBorders();
         this.speed.add(this.dir);
         this.speed.setMag(this.speedMag);
         this.pos.add(this.speed);
