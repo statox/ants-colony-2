@@ -6,6 +6,7 @@ import {Ant} from './Ant';
 import {PheromoneTrail} from './PheromoneTrail';
 import {FoodStock} from './Food';
 import {Home} from './Home';
+import timers from './time/Timer';
 
 const Quadtree = require('quadtree-lib');
 
@@ -14,6 +15,7 @@ const sketch = (p5: P5) => {
     let nbAnts = 50;
     let ants = [];
     let frameRateHistory = new Array(10).fill(0);
+    setInterval(() => timers.printGroup('ants_getSeenItems'), 5000);
 
     const quadToHome = new PheromoneTrail(p5, D, 'TO_HOME');
     const quadToFood = new PheromoneTrail(p5, D, 'TO_FOOD');
@@ -55,17 +57,25 @@ const sketch = (p5: P5) => {
 
         home.draw();
 
+        timers.startTimer('main_loop', 'quadHomeUpdate');
         quadToHome.update();
+        timers.stopTimer('main_loop', 'quadHomeUpdate');
         quadToHome.draw();
 
+        timers.startTimer('main_loop', 'quadFoodUpdate');
         quadToFood.update();
+        timers.stopTimer('main_loop', 'quadFoodUpdate');
         quadToFood.draw();
 
+        timers.startTimer('main_loop', 'foodStockUpdate');
         foodStock.update();
+        timers.stopTimer('main_loop', 'foodStockUpdate');
         foodStock.draw();
 
         for (let i = 0; i < ants.length; i++) {
+            timers.startTimer('main_loop', 'antsUpdate');
             ants[i].update();
+            timers.stopTimer('main_loop', 'antsUpdate');
             ants[i].draw();
         }
 
@@ -78,8 +88,9 @@ const sketch = (p5: P5) => {
     };
 
     p5.mousePressed = () => {
+        timers.print();
         // addAnt();
-        addFood();
+        // addFood();
         // addPheromone(p5.mouseX - p5.width / 2, p5.mouseY - p5.height / 2);
         // p5.noLoop();
     };
