@@ -3,7 +3,6 @@ import {FoodStock} from './Food';
 import {Home} from './Home';
 import {PheromoneTrail} from './PheromoneTrail';
 import config from './config';
-import timers from './time/Timer';
 
 export class Ant {
     p5: P5;
@@ -32,7 +31,7 @@ export class Ant {
         this.layingDelay = 15;
         // Angle of 10 degrees make then line up quicker
         // Angle of 45 degrees still creates the issue but after a longer time
-        this.maxAngle = p5.radians(45);
+        this.maxAngle = p5.radians(10);
         this.speedMag = 4;
 
         this.pos = new P5.Vector();
@@ -71,7 +70,6 @@ export class Ant {
     update() {
         this.age++;
 
-        timers.startTimer('ant', 'change_state');
         if (this.state === 'backtrack' && this.hitHome()) {
             this.state = 'explore';
             this.dir.rotate(this.p5.PI);
@@ -79,16 +77,11 @@ export class Ant {
             this.state = 'backtrack';
             this.dir.rotate(this.p5.PI);
         }
-        timers.stopTimer('ant', 'change_state');
 
-        timers.startTimer('ant', 'move');
         this.move();
-        timers.stopTimer('ant', 'move');
-        timers.startTimer('ant', 'lay_pheromone');
         if (this.age % this.layingDelay === 0) {
             this.layPheromone();
         }
-        timers.stopTimer('ant', 'lay_pheromone');
     }
 
     // Depending on the wrap mode either bounce on walls
@@ -130,49 +123,32 @@ export class Ant {
     }
 
     move() {
-        timers.startTimer('ant_move', 'pheromones');
         if (config.follow_pheromones) {
             let items;
             if (this.state === 'explore') {
-                timers.startTimer('ant_pheromones', 'get_explore');
                 items = [...this.getSeenItems('TO_FOOD'), ...this.getSeenItems('FOOD')];
-                timers.stopTimer('ant_pheromones', 'get_explore');
             } else if (this.state === 'backtrack') {
-                timers.startTimer('ant_pheromones', 'get_backtrack');
                 items = this.getSeenItems('TO_HOME');
-                timers.stopTimer('ant_pheromones', 'get_backtrack');
             }
 
-            timers.startTimer('ant_pheromones', 'barycenter');
             const barycenter = this.getItemsBarycenter(items);
-            timers.stopTimer('ant_pheromones', 'barycenter');
-            timers.startTimer('ant_pheromones', 'update');
             this.barycenter = barycenter?.copy();
             if (barycenter) {
                 this.dir.setMag(0);
                 this.dir = barycenter.sub(this.pos);
             }
-            timers.stopTimer('ant_pheromones', 'update');
         }
-        timers.stopTimer('ant_move', 'pheromones');
 
-        timers.startTimer('ant_move', 'wiggle');
         // Add random wiggling
         this.dir.rotate(Math.random() * this.maxAngle - this.maxAngle / 2);
-        timers.stopTimer('ant_move', 'wiggle');
 
-        timers.startTimer('ant_move', 'borders');
         this.handleBorders();
-        timers.stopTimer('ant_move', 'borders');
-        timers.startTimer('ant_move', 'updates');
         this.speed.add(this.dir);
         this.speed.setMag(this.speedMag);
         this.pos.add(this.speed);
-        timers.stopTimer('ant_move', 'updates');
     }
 
     getSeenItems(type: 'TO_HOME' | 'TO_FOOD' | 'FOOD') {
-        timers.startTimer('ants_getSeenItems', 'get_quad');
         let quad;
         if (type === 'TO_FOOD') {
             quad = this.quadToFood.quad;
@@ -181,18 +157,13 @@ export class Ant {
         } else {
             quad = this.foodStock.quad;
         }
-        timers.stopTimer('ants_getSeenItems', 'get_quad');
-        timers.startTimer('ants_getSeenItems', 'offset');
         const offset = this.speed.copy().normalize();
-        timers.stopTimer('ants_getSeenItems', 'offset');
-        timers.startTimer('ants_getSeenItems', 'collision');
         const result = quad.colliding({
             x: this.pos.x + offset.x * this.visionRadius - this.visionRadius,
             y: this.pos.y + offset.y * this.visionRadius - this.visionRadius,
             width: this.visionRadius * 2,
             height: this.visionRadius * 2
         });
-        timers.stopTimer('ants_getSeenItems', 'collision');
         return result;
     }
 
