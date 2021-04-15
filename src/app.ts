@@ -79,8 +79,8 @@ const sketch = (p5: P5) => {
 
     p5.mousePressed = () => {
         // addAnt();
-        addFood();
-        // addPheromone(p5.mouseX - p5.width / 2, p5.mouseY - p5.height / 2);
+        // addFood();
+        addPheromone(p5.mouseX - p5.width / 2, p5.mouseY - p5.height / 2);
         // p5.noLoop();
     };
 
@@ -108,11 +108,17 @@ const sketch = (p5: P5) => {
 
     const addPheromone = (x: number, y: number) => {
         let quad: PheromoneTrail | FoodStock = quadToFood;
-        if (p5.keyIsDown(p5.SHIFT)) {
-            quad = foodStock;
+        const isShiftDown = p5.keyIsDown(p5.SHIFT);
+        const isCtrlDown = p5.keyIsDown(p5.CONTROL);
+        if (!isShiftDown && !isCtrlDown) {
+            addFood();
+            return;
         }
-        if (p5.keyIsDown(p5.CONTROL)) {
+        if (isShiftDown && !isCtrlDown) {
             quad = quadToHome;
+        }
+        if (!isShiftDown && isCtrlDown) {
+            quad = quadToFood;
         }
         quad.push({x, y});
     };
