@@ -6,17 +6,20 @@ import {Ant} from './Ant';
 import {PheromoneTrail} from './PheromoneTrail';
 import {FoodStock} from './Food';
 import {Home} from './Home';
+import config from './config';
 
 const Quadtree = require('quadtree-lib');
 
 const sketch = (p5: P5) => {
     let D = 800;
-    let nbAnts = 50;
+    let nbAnts = config.nb_ants;
     let ants = [];
     let frameRateHistory = new Array(10).fill(0);
+    let lastDrop;
 
     const quadToHome = new PheromoneTrail(p5, D, 'TO_HOME');
     const quadToFood = new PheromoneTrail(p5, D, 'TO_FOOD');
+    const quadRepellent = new PheromoneTrail(p5, D, 'REPELLENT');
     const foodStock = new FoodStock(p5, D);
     const home = new Home(p5);
 
@@ -25,10 +28,11 @@ const sketch = (p5: P5) => {
         // Creating and positioning the canvas
         const canvas = p5.createCanvas(D, D);
         canvas.parent('app');
+
         p5.rectMode(p5.CENTER);
 
         for (let i = 0; i < nbAnts; i++) {
-            ants.push(new Ant(p5, quadToHome, quadToFood, foodStock, home, i));
+            ants.push(new Ant(p5, quadToHome, quadToFood, quadRepellent, foodStock, home, i));
         }
 
         /*
@@ -55,14 +59,19 @@ const sketch = (p5: P5) => {
 
         home.draw();
 
+        if (config.generate_food) {
+            foodStock.update();
+            foodStock.draw();
+        }
+
         quadToHome.update();
         quadToHome.draw();
 
         quadToFood.update();
         quadToFood.draw();
 
-        foodStock.update();
-        foodStock.draw();
+        quadRepellent.update();
+        quadRepellent.draw();
 
         for (let i = 0; i < ants.length; i++) {
             ants[i].update();
@@ -75,17 +84,30 @@ const sketch = (p5: P5) => {
                 y: Math.random() * 50 - 25
             });
         }
+
+        if (p5.keyIsDown(p5.SHIFT)) {
+            if (!lastDrop || p5.millis() > lastDrop + 50) {
+                addPheromone('TO_FOOD');
+                lastDrop = p5.millis();
+            }
+        }
+        if (p5.keyIsDown(p5.CONTROL)) {
+            if (!lastDrop || p5.millis() > lastDrop + 50) {
+                addPheromone('TO_HOME');
+                lastDrop = p5.millis();
+            }
+        }
     };
 
-    p5.mousePressed = () => {
+    p5.mousePressed = (event) => {
+        if (p5.mouseButton === p5.LEFT) {
+            addFood();
+        }
+        if (p5.mouseButton === p5.RIGHT) {
+            removeFood();
+        }
         // addAnt();
-        // addFood();
-        addPheromone(p5.mouseX - p5.width / 2, p5.mouseY - p5.height / 2);
         // p5.noLoop();
-    };
-
-    p5.touchStarted = () => {
-        addFood();
     };
 
     const addFood = () => {
@@ -95,8 +117,21 @@ const sketch = (p5: P5) => {
         foodStock.generateFoodSpot(pos);
     };
 
+    const removeFood = () => {
+        const pos = new P5.Vector();
+        pos.x = p5.mouseX - p5.width / 2;
+        pos.y = p5.mouseY - p5.height / 2;
+        const result = foodStock.quad.colliding({
+            x: pos.x,
+            y: pos.y,
+            width: 100,
+            height: 100
+        });
+        result.forEach((f) => foodStock.remove(f));
+    };
+
     const addAnt = () => {
-        ants.push(new Ant(p5, quadToHome, quadToFood, foodStock, home, ants.length));
+        ants.push(new Ant(p5, quadToHome, quadToFood, quadRepellent, foodStock, home, ants.length));
     };
 
     const getFrameRate = () => {
@@ -106,22 +141,34 @@ const sketch = (p5: P5) => {
         return total.toFixed(0);
     };
 
-    const addPheromone = (x: number, y: number) => {
-        let quad: PheromoneTrail | FoodStock = quadToFood;
-        const isShiftDown = p5.keyIsDown(p5.SHIFT);
-        const isCtrlDown = p5.keyIsDown(p5.CONTROL);
-        if (!isShiftDown && !isCtrlDown) {
-            addFood();
-            return;
-        }
-        if (isShiftDown && !isCtrlDown) {
+    const addPheromone = (type: 'TO_FOOD' | 'TO_HOME') => {
+        let quad: PheromoneTrail = quadToFood;
+        if (type === 'TO_HOME') {
             quad = quadToHome;
         }
-        if (!isShiftDown && isCtrlDown) {
-            quad = quadToFood;
-        }
+        const x = p5.mouseX - p5.width / 2;
+        const y = p5.mouseY - p5.height / 2;
         quad.push({x, y});
     };
+
+    /*
+     * const addPheromone = (x: number, y: number) => {
+     *     let quad: PheromoneTrail | FoodStock = quadToFood;
+     *     const isShiftDown = p5.keyIsDown(p5.SHIFT);
+     *     const isCtrlDown = p5.keyIsDown(p5.CONTROL);
+     *     if (!isShiftDown && !isCtrlDown) {
+     *         addFood();
+     *         return;
+     *     }
+     *     if (isShiftDown && !isCtrlDown) {
+     *         quad = quadToHome;
+     *     }
+     *     if (!isShiftDown && isCtrlDown) {
+     *         quad = quadToFood;
+     *     }
+     *     quad.push({x, y});
+     * };
+     */
 };
 
 new P5(sketch);

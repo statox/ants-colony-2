@@ -15,6 +15,7 @@ export class Ant {
     age: number;
     quadToHome: PheromoneTrail;
     quadToFood: PheromoneTrail;
+    quadRepellent: PheromoneTrail;
     foodStock: FoodStock;
     visionRadius: number;
     layingDelay: number;
@@ -22,7 +23,7 @@ export class Ant {
     home: Home;
     barycenter: P5.Vector;
 
-    constructor(p5, quadToHome, quadToFood, foodStock, home, id) {
+    constructor(p5, quadToHome, quadToFood, quadRepellent, foodStock, home, id) {
         this.p5 = p5;
         this.id = id;
         this.state = 'explore';
@@ -39,6 +40,7 @@ export class Ant {
         this.dir = P5.Vector.random2D();
         this.quadToHome = quadToHome;
         this.quadToFood = quadToFood;
+        this.quadRepellent = quadRepellent;
         this.foodStock = foodStock;
         this.home = home;
     }
@@ -78,9 +80,12 @@ export class Ant {
             this.dir.rotate(this.p5.PI);
         }
 
-        this.move();
+        const diffHeading = this.move();
         if (this.age % this.layingDelay === 0) {
             this.layPheromone();
+        }
+        if (config.lay_repellent && Math.abs(diffHeading) >= 150) {
+            this.layPheromone('REPELLENT');
         }
     }
 
@@ -142,10 +147,14 @@ export class Ant {
         // Add random wiggling
         this.dir.rotate(Math.random() * this.maxAngle - this.maxAngle / 2);
 
+        const prevHeading = this.speed.heading();
         this.handleBorders();
         this.speed.add(this.dir);
         this.speed.setMag(this.speedMag);
+        const currentHeading = this.speed.heading();
+        const headingDiff = this.p5.degrees(prevHeading - currentHeading);
         this.pos.add(this.speed);
+        return headingDiff;
     }
 
     getSeenItems(type: 'TO_HOME' | 'TO_FOOD' | 'FOOD') {
@@ -182,10 +191,14 @@ export class Ant {
         return barycenter;
     }
 
-    layPheromone() {
+    layPheromone(repellent?: 'REPELLENT') {
         let trail = this.quadToFood;
         if (this.state === 'explore') {
             trail = this.quadToHome;
+        }
+        if (repellent === 'REPELLENT') {
+            console.log('REPELLENT');
+            trail = this.quadRepellent;
         }
         trail.push({x: this.pos.x, y: this.pos.y});
     }
