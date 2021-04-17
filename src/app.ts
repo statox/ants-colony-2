@@ -61,8 +61,8 @@ const sketch = (p5: P5) => {
 
         if (config.generate_food) {
             foodStock.update();
-            foodStock.draw();
         }
+        foodStock.draw();
 
         quadToHome.update();
         quadToHome.draw();
@@ -108,6 +108,15 @@ const sketch = (p5: P5) => {
         }
         // addAnt();
         // p5.noLoop();
+    };
+
+    p5.keyPressed = () => {
+        if (p5.keyCode === 67) {
+            // C
+            quadToHome.quad.clear();
+            quadToFood.quad.clear();
+        }
+        console.log(p5.keyCode);
     };
 
     const addFood = () => {

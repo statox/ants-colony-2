@@ -6,11 +6,13 @@ export class FoodStock {
     quad: Quadtree<any>;
     itemSize: number;
     size: number;
+    amount: number;
 
     constructor(p5: P5, D: number) {
         this.p5 = p5;
         this.itemSize = 8;
         this.size = 0;
+        this.amount = 30;
         this.quad = new Quadtree({
             width: D,
             height: D,
@@ -40,8 +42,7 @@ export class FoodStock {
         }
 
         let radius = 20;
-        let amount = 100;
-        for (let i = 0; i < amount; i++) {
+        for (let i = 0; i < this.amount; i++) {
             const diff = P5.Vector.random2D().setMag(Math.random() * radius);
             diff.add(pos);
             this.push({x: diff.x, y: diff.y});

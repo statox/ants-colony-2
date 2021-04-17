@@ -112,17 +112,50 @@ export class Ant {
                 this.pos.y = TOP;
             }
         } else {
-            if (this.pos.x < LEFT) {
-                this.dir.x = 1000;
+            const THRESHOLD = 100;
+            if (this.pos.x < LEFT + THRESHOLD) {
+                const repulsionMag = this.p5.map(
+                    this.pos.x,
+                    LEFT + THRESHOLD,
+                    LEFT,
+                    this.dir.mag() * 0.1,
+                    this.dir.mag() * 2
+                );
+                const repulsion = this.p5.createVector(1, 0).setMag(repulsionMag);
+                this.dir.add(repulsion);
             }
-            if (this.pos.x > RIGHT) {
-                this.dir.x = -1000;
+            if (this.pos.x > RIGHT - THRESHOLD) {
+                const repulsionMag = this.p5.map(
+                    this.pos.x,
+                    RIGHT - THRESHOLD,
+                    RIGHT,
+                    this.dir.mag() * 0.1,
+                    this.dir.mag() * 2
+                );
+                const repulsion = this.p5.createVector(-1, 0).setMag(repulsionMag);
+                this.dir.add(repulsion);
             }
-            if (this.pos.y < TOP) {
-                this.dir.y = 1000;
+            if (this.pos.y < TOP + THRESHOLD) {
+                const repulsionMag = this.p5.map(
+                    this.pos.y,
+                    TOP + THRESHOLD,
+                    TOP,
+                    this.dir.mag() * 0.1,
+                    this.dir.mag() * 2
+                );
+                const repulsion = this.p5.createVector(0, 1).setMag(repulsionMag);
+                this.dir.add(repulsion);
             }
-            if (this.pos.y > BOTTOM) {
-                this.dir.y = -1000;
+            if (this.pos.y > BOTTOM - THRESHOLD) {
+                const repulsionMag = this.p5.map(
+                    this.pos.y,
+                    BOTTOM - THRESHOLD,
+                    BOTTOM,
+                    this.dir.mag() * 0.1,
+                    this.dir.mag() * 2
+                );
+                const repulsion = this.p5.createVector(0, -1).setMag(repulsionMag);
+                this.dir.add(repulsion);
             }
         }
     }
@@ -145,7 +178,9 @@ export class Ant {
         }
 
         // Add random wiggling
-        this.dir.rotate(Math.random() * this.maxAngle - this.maxAngle / 2);
+        if (config.random_wiggling_enabled) {
+            this.dir.rotate(Math.random() * this.maxAngle - this.maxAngle / 2);
+        }
 
         const prevHeading = this.speed.heading();
         this.handleBorders();
