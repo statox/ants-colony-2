@@ -235,7 +235,18 @@ export class Ant {
             console.log('REPELLENT');
             trail = this.quadRepellent;
         }
-        trail.push({x: this.pos.x, y: this.pos.y});
+
+        // Lay the pheromone with a little offset next to the actual position of the ant
+        // This way they dont walk on the other trail and form one trail to food and
+        // one trail to home next to each other
+        const direction = this.state === 'backtrack' ? 0 : 1;
+        const pheromonePosition = this.pos.copy().add(
+            this.dir
+                .copy()
+                .mult(0.5)
+                .rotate(direction * this.p5.QUARTER_PI)
+        );
+        trail.push({x: pheromonePosition.x, y: pheromonePosition.y});
     }
 
     draw() {
