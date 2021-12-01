@@ -9,7 +9,10 @@ export class Ant {
     id: number;
     pos: P5.Vector;
     speed: P5.Vector;
-    speedMag: number;
+    speedMag: {
+        explore: number;
+        backtrack: number;
+    };
     dir: P5.Vector;
     state: 'explore' | 'backtrack';
     age: number;
@@ -33,7 +36,10 @@ export class Ant {
         // Angle of 10 degrees make then line up quicker
         // Angle of 45 degrees still creates the issue but after a longer time
         this.maxAngle = p5.radians(10);
-        this.speedMag = 4;
+        this.speedMag = {
+            explore: 4,
+            backtrack: 2
+        };
 
         this.pos = new P5.Vector();
         this.speed = P5.Vector.random2D();
@@ -185,7 +191,7 @@ export class Ant {
         const prevHeading = this.speed.heading();
         this.handleBorders();
         this.speed.add(this.dir);
-        this.speed.setMag(this.speedMag);
+        this.speed.setMag(this.speedMag[this.state]);
         const currentHeading = this.speed.heading();
         const headingDiff = this.p5.degrees(prevHeading - currentHeading);
         this.pos.add(this.speed);
