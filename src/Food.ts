@@ -21,7 +21,7 @@ export class FoodStock {
     }
 
     update() {
-        if (this.size < 10) {
+        if (this.size < 50) {
             this.generateFoodSpot();
             const additionalToGenerate = Math.ceil(Math.random() * 5);
             for (let _ = 0; _ < additionalToGenerate; _++) {
